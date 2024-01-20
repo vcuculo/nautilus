@@ -5394,7 +5394,6 @@ copy_files (CopyMoveJob  *job,
     GList *l;
     GFile *src;
     gboolean same_fs;
-    int i;
     gboolean skipped_file;
     gboolean unique_names;
     GFile *dest;
@@ -5424,7 +5423,6 @@ copy_files (CopyMoveJob  *job,
     }
 
     unique_names = (job->destination == NULL);
-    i = 0;
     for (l = job->files;
          l != NULL && !job_aborted (common);
          l = l->next)
@@ -5463,7 +5461,6 @@ copy_files (CopyMoveJob  *job,
                 report_copy_progress (job, source_info, transfer_info);
             }
         }
-        i++;
     }
 
     g_free (dest_fs_type);
