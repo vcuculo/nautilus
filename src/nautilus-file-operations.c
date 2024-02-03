@@ -1289,7 +1289,8 @@ report_delete_progress (CommonJob    *job,
 
         basename = get_basename (G_FILE (delete_job->files->data));
         nautilus_progress_info_take_status (job->progress,
-                                            g_strdup_printf (status, basename));
+                                            g_strdup_printf (status, basename),
+                                            NULL);
     }
     else
     {
@@ -1327,7 +1328,8 @@ report_delete_progress (CommonJob    *job,
         }
         nautilus_progress_info_take_status (job->progress,
                                             g_strdup_printf (status,
-                                                             source_info->num_files));
+                                                             source_info->num_files),
+                                            NULL);
     }
 
     elapsed = g_timer_elapsed (job->time, NULL);
@@ -1702,7 +1704,8 @@ report_trash_progress (CommonJob    *job,
 
         basename = get_basename (G_FILE (delete_job->files->data));
         nautilus_progress_info_take_status (job->progress,
-                                            g_strdup_printf (status, basename));
+                                            g_strdup_printf (status, basename),
+                                            NULL);
     }
     else
     {
@@ -1720,7 +1723,8 @@ report_trash_progress (CommonJob    *job,
         }
         nautilus_progress_info_take_status (job->progress,
                                             g_strdup_printf (status,
-                                                             source_info->num_files));
+                                                             source_info->num_files),
+                                            NULL);
     }
 
 
@@ -3460,9 +3464,11 @@ report_copy_progress (CopyMoveJob  *copy_job,
     guint64 now;
     CommonJob *job;
     gboolean is_move;
+    gchar *short_status;
     gchar *status;
     char *details;
     gchar *tmp;
+    gchar *tmp_short;
 
     job = (CommonJob *) copy_job;
 
@@ -3505,10 +3511,12 @@ report_copy_progress (CopyMoveJob  *copy_job,
                 {
                     if (files_left > 0)
                     {
+                        short_status = _("Moving “%s”");
                         status = _("Moving “%s” to “%s”");
                     }
                     else
                     {
+                        short_status = _("Moved “%s”");
                         status = _("Moved “%s” to “%s”");
                     }
                 }
@@ -3516,10 +3524,12 @@ report_copy_progress (CopyMoveJob  *copy_job,
                 {
                     if (files_left > 0)
                     {
+                        short_status = _("Copying “%s”");
                         status = _("Copying “%s” to “%s”");
                     }
                     else
                     {
+                        short_status = _("Copied “%s”");
                         status = _("Copied “%s” to “%s”");
                     }
                 }
@@ -3534,6 +3544,8 @@ report_copy_progress (CopyMoveJob  *copy_job,
                     tmp = g_strdup_printf (status,
                                            basename_fake_display_source,
                                            basename_dest);
+                    tmp_short = g_strdup_printf (short_status,
+                                                 basename_fake_display_source);
                 }
                 else
                 {
@@ -3543,10 +3555,11 @@ report_copy_progress (CopyMoveJob  *copy_job,
                     tmp = g_strdup_printf (status,
                                            basename_data,
                                            basename_dest);
+                    tmp_short = g_strdup_printf (short_status, basename_data);
                 }
 
                 nautilus_progress_info_take_status (job->progress,
-                                                    tmp);
+                                                    tmp, tmp_short);
             }
             else
             {
@@ -3563,8 +3576,8 @@ report_copy_progress (CopyMoveJob  *copy_job,
 
                 basename = get_basename (G_FILE (copy_job->files->data));
                 nautilus_progress_info_take_status (job->progress,
-                                                    g_strdup_printf (status,
-                                                                     basename));
+                                                    g_strdup_printf (status, basename),
+                                                    NULL);
             }
         }
         else if (copy_job->files != NULL)
@@ -3577,12 +3590,18 @@ report_copy_progress (CopyMoveJob  *copy_job,
 
                     if (is_move)
                     {
+                        short_status = ngettext ("Moving %'d file",
+                                                 "Moving %'d files",
+                                                 source_info->num_files);
                         status = ngettext ("Moving %'d file to “%s”",
                                            "Moving %'d files to “%s”",
                                            source_info->num_files);
                     }
                     else
                     {
+                        short_status = ngettext ("Copying %'d file",
+                                                 "Copying %'d files",
+                                                 source_info->num_files);
                         status = ngettext ("Copying %'d file to “%s”",
                                            "Copying %'d files to “%s”",
                                            source_info->num_files);
@@ -3592,9 +3611,11 @@ report_copy_progress (CopyMoveJob  *copy_job,
                     tmp = g_strdup_printf (status,
                                            source_info->num_files,
                                            basename);
+                    tmp_short = g_strdup_printf (short_status,
+                                                 source_info->num_files);
 
                     nautilus_progress_info_take_status (job->progress,
-                                                        tmp);
+                                                        tmp, tmp_short);
                 }
                 else
                 {
@@ -3602,12 +3623,18 @@ report_copy_progress (CopyMoveJob  *copy_job,
 
                     if (is_move)
                     {
+                        short_status = ngettext ("Moved %'d file",
+                                                 "Moved %'d files",
+                                                 source_info->num_files);
                         status = ngettext ("Moved %'d file to “%s”",
                                            "Moved %'d files to “%s”",
                                            source_info->num_files);
                     }
                     else
                     {
+                        short_status = ngettext ("Copied %'d file",
+                                                 "Copied %'d files",
+                                                 source_info->num_files);
                         status = ngettext ("Copied %'d file to “%s”",
                                            "Copied %'d files to “%s”",
                                            source_info->num_files);
@@ -3617,9 +3644,11 @@ report_copy_progress (CopyMoveJob  *copy_job,
                     tmp = g_strdup_printf (status,
                                            source_info->num_files,
                                            basename);
+                    tmp_short = g_strdup_printf (short_status,
+                                                 source_info->num_files);
 
                     nautilus_progress_info_take_status (job->progress,
-                                                        tmp);
+                                                        tmp, tmp_short);
                 }
             }
             else
@@ -3631,23 +3660,33 @@ report_copy_progress (CopyMoveJob  *copy_job,
                 basename = get_basename (parent);
                 if (files_left > 0)
                 {
+                    short_status = ngettext ("Duplicating %'d file",
+                                             "Duplicating %'d files",
+                                             source_info->num_files);
                     status = ngettext ("Duplicating %'d file in “%s”",
                                        "Duplicating %'d files in “%s”",
                                        source_info->num_files);
                     nautilus_progress_info_take_status (job->progress,
                                                         g_strdup_printf (status,
                                                                          source_info->num_files,
-                                                                         basename));
+                                                                         basename),
+                                                        g_strdup_printf (short_status,
+                                                                         source_info->num_files));
                 }
                 else
                 {
+                    short_status = ngettext ("Duplicated %'d file",
+                                             "Duplicated %'d files",
+                                             source_info->num_files);
                     status = ngettext ("Duplicated %'d file in “%s”",
                                        "Duplicated %'d files in “%s”",
                                        source_info->num_files);
                     nautilus_progress_info_take_status (job->progress,
                                                         g_strdup_printf (status,
                                                                          source_info->num_files,
-                                                                         basename));
+                                                                         basename),
+                                                        g_strdup_printf (short_status,
+                                                                         source_info->num_files));
                 }
                 g_object_unref (parent);
             }
@@ -5661,7 +5700,8 @@ report_preparing_move_progress (CopyMoveJob *move_job,
 
     nautilus_progress_info_take_status (job->progress,
                                         g_strdup_printf (_("Preparing to move to “%s”"),
-                                                         basename));
+                                                         basename),
+                                        g_strdup (_("Preparing to move")));
 
     nautilus_progress_info_take_details (job->progress,
                                          g_strdup_printf (ngettext ("Preparing to move %'d file",
@@ -6358,7 +6398,8 @@ report_preparing_link_progress (CopyMoveJob *link_job,
     basename = get_basename (link_job->destination);
     nautilus_progress_info_take_status (job->progress,
                                         g_strdup_printf (_("Creating links in “%s”"),
-                                                         basename));
+                                                         basename),
+                                        g_strdup (_("Creating links")));
 
     nautilus_progress_info_take_details (job->progress,
                                          g_strdup_printf (ngettext ("Making link to %'d file",
@@ -6858,7 +6899,7 @@ set_permissions_thread_func (GTask        *task,
     common = (CommonJob *) job;
 
     nautilus_progress_info_set_status (common->progress,
-                                       _("Setting permissions"));
+                                       _("Setting permissions"), NULL);
 
     nautilus_progress_info_start (job->common.progress);
     set_permissions_contained_files (job, job->file);
@@ -7501,7 +7542,7 @@ save_image_thread_func (GTask        *task,
     }
 
     nautilus_progress_info_set_progress (job->common.progress, .35, 1);
-    nautilus_progress_info_set_status (job->common.progress, _("Saving image to file"));
+    nautilus_progress_info_set_status (job->common.progress, _("Saving image to file"), _("Saving image"));
     bytes = gdk_texture_save_to_png_bytes (job->texture);
     nautilus_progress_info_set_progress (job->common.progress, .65, 1);
     nautilus_progress_info_set_details (job->common.progress, "");
@@ -7510,7 +7551,9 @@ save_image_thread_func (GTask        *task,
     {
         job->success = TRUE;
         nautilus_progress_info_set_progress (job->common.progress, 1, 1);
-        nautilus_progress_info_set_status (job->common.progress, _("Successfully saved image to file"));
+        nautilus_progress_info_set_status (job->common.progress,
+                                           _("Successfully saved image to file"),
+                                           _("Successfully saved imaged"));
     }
 }
 
@@ -7540,7 +7583,7 @@ save_image_task_done (GObject      *source_object,
         {
             g_file_delete (job->location, NULL, NULL);
         }
-        nautilus_progress_info_set_status (job->common.progress, _("Failed to save image"));
+        nautilus_progress_info_set_status (job->common.progress, _("Failed to save image"), NULL);
     }
 
     g_free (job->base_name);
@@ -7609,7 +7652,7 @@ nautilus_file_operations_paste_image_from_clipboard (GtkWidget                  
     job->done_callback_data = done_callback_data;
 
     nautilus_progress_info_start (job->common.progress);
-    nautilus_progress_info_set_status (job->common.progress, _("Retrieving clipboard data"));
+    nautilus_progress_info_set_status (job->common.progress, _("Retrieving clipboard data"), NULL);
     gdk_clipboard_read_texture_async (clipboard, job->common.cancellable, clipboard_image_received_callback, job);
 }
 
@@ -7641,7 +7684,7 @@ nautilus_file_operations_save_image_from_texture (GtkWidget                     
     job->done_callback_data = done_callback_data;
 
     nautilus_progress_info_start (job->common.progress);
-    nautilus_progress_info_set_status (job->common.progress, _("Retrieving image data"));
+    nautilus_progress_info_set_status (job->common.progress, _("Retrieving image data"), NULL);
 
     task = g_task_new (NULL, NULL, save_image_task_done, job);
     g_task_set_task_data (task, job, NULL);
@@ -7952,7 +7995,8 @@ extract_job_on_progress (AutoarExtractor *extractor,
     basename = get_basename (source_file);
     nautilus_progress_info_take_status (common->progress,
                                         g_strdup_printf (_("Extracting “%s”"),
-                                                         basename));
+                                                         basename),
+                                        NULL);
 
     archive_total_decompressed_size = autoar_extractor_get_total_size (extractor);
 
@@ -8078,7 +8122,8 @@ extract_job_on_error (AutoarExtractor *extractor,
     basename = get_basename (source_file);
     nautilus_progress_info_take_status (extract_job->common.progress,
                                         g_strdup_printf (_("Error extracting “%s”"),
-                                                         basename));
+                                                         basename),
+                                        NULL);
 
     remaining_files = g_list_length (g_list_find_custom (extract_job->source_files,
                                                          source_file,
@@ -8168,7 +8213,8 @@ extract_job_on_scanned (AutoarExtractor *extractor,
     {
         nautilus_progress_info_take_status (extract_job->common.progress,
                                             g_strdup_printf (_("Error extracting “%s”"),
-                                                             basename));
+                                                             basename),
+                                            NULL);
         run_error (&extract_job->common,
                    g_strdup_printf (_("Not enough free space to extract %s"), basename),
                    NULL,
@@ -8184,6 +8230,7 @@ extract_job_on_scanned (AutoarExtractor *extractor,
 static void
 report_extract_final_progress (ExtractJob *extract_job)
 {
+    char *short_status;
     char *status;
     g_autofree gchar *basename_dest = NULL;
     g_autofree gchar *formatted_size = NULL;
@@ -8203,12 +8250,18 @@ report_extract_final_progress (ExtractJob *extract_job)
 
         source_file = G_FILE (extract_job->source_files->data);
         basename = get_basename (source_file);
+        short_status = g_strdup_printf (_("Extracted “%s”"),
+                                        basename);
         status = g_strdup_printf (_("Extracted “%s” to “%s”"),
                                   basename,
                                   basename_dest);
     }
     else
     {
+        status = g_strdup_printf (ngettext ("Extracted %'d file",
+                                            "Extracted %'d files",
+                                            extract_job->total_files),
+                                  extract_job->total_files);
         status = g_strdup_printf (ngettext ("Extracted %'d file to “%s”",
                                             "Extracted %'d files to “%s”",
                                             extract_job->total_files),
@@ -8217,7 +8270,7 @@ report_extract_final_progress (ExtractJob *extract_job)
     }
 
     nautilus_progress_info_take_status (extract_job->common.progress,
-                                        status);
+                                        status, short_status);
     formatted_size = g_format_size (extract_job->total_compressed_size);
     nautilus_progress_info_take_details (extract_job->common.progress,
                                          g_strdup_printf (_("%s / %s"),
@@ -8416,6 +8469,7 @@ compress_job_on_progress (AutoarCompressor *compressor,
 {
     CompressJob *compress_job = user_data;
     CommonJob *common = user_data;
+    char *short_status;
     char *status;
     char *details;
     int files_left;
@@ -8431,19 +8485,25 @@ compress_job_on_progress (AutoarCompressor *compressor,
         g_autofree gchar *basename_data = NULL;
 
         basename_data = get_basename (G_FILE (compress_job->source_files->data));
+        short_status = g_strdup_printf (_("Compressing “%s”"),
+                                        basename_data);
         status = g_strdup_printf (_("Compressing “%s” into “%s”"),
                                   basename_data,
                                   basename_output_file);
     }
     else
     {
+        short_status = g_strdup_printf (ngettext ("Compressing %'d file",
+                                                  "Compressing %'d files",
+                                                  compress_job->total_files),
+                                        compress_job->total_files);
         status = g_strdup_printf (ngettext ("Compressing %'d file into “%s”",
                                             "Compressing %'d files into “%s”",
                                             compress_job->total_files),
                                   compress_job->total_files,
                                   basename_output_file);
     }
-    nautilus_progress_info_take_status (common->progress, status);
+    nautilus_progress_info_take_status (common->progress, status, short_status);
 
     elapsed = g_timer_elapsed (common->time, NULL);
 
@@ -8576,6 +8636,7 @@ compress_job_on_error (AutoarCompressor *compressor,
                        gpointer          user_data)
 {
     CompressJob *compress_job = user_data;
+    char *short_status;
     char *status;
     g_autofree gchar *basename_output_file = NULL;
 
@@ -8585,12 +8646,18 @@ compress_job_on_error (AutoarCompressor *compressor,
         g_autofree gchar *basename_data = NULL;
 
         basename_data = get_basename (G_FILE (compress_job->source_files->data));
+        short_status = g_strdup_printf (_("Error compressing “%s”"),
+                                        basename_data);
         status = g_strdup_printf (_("Error compressing “%s” into “%s”"),
                                   basename_data,
                                   basename_output_file);
     }
     else
     {
+        short_status = g_strdup_printf (ngettext ("Error compressing %'d file",
+                                                  "Error compressing %'d files",
+                                                  compress_job->total_files),
+                                        compress_job->total_files);
         status = g_strdup_printf (ngettext ("Error compressing %'d file into “%s”",
                                             "Error compressing %'d files into “%s”",
                                             compress_job->total_files),
@@ -8598,7 +8665,7 @@ compress_job_on_error (AutoarCompressor *compressor,
                                   basename_output_file);
     }
     nautilus_progress_info_take_status (compress_job->common.progress,
-                                        status);
+                                        status, short_status);
 
     run_error ((CommonJob *) compress_job,
                g_strdup (_("There was an error while compressing files.")),
@@ -8617,6 +8684,7 @@ compress_job_on_completed (AutoarCompressor *compressor,
 {
     CompressJob *compress_job = user_data;
     g_autoptr (GFile) destination_directory = NULL;
+    char *short_status;
     char *status;
     g_autofree gchar *basename_output_file = NULL;
 
@@ -8626,12 +8694,18 @@ compress_job_on_completed (AutoarCompressor *compressor,
         g_autofree gchar *basename_data = NULL;
 
         basename_data = get_basename (G_FILE (compress_job->source_files->data));
+        short_status = g_strdup_printf (_("Compressed “%s”"),
+                                        basename_data);
         status = g_strdup_printf (_("Compressed “%s” into “%s”"),
                                   basename_data,
                                   basename_output_file);
     }
     else
     {
+        short_status = g_strdup_printf (ngettext ("Compressed %'d file",
+                                                  "Compressed %'d files",
+                                                  compress_job->total_files),
+                                        compress_job->total_files);
         status = g_strdup_printf (ngettext ("Compressed %'d file into “%s”",
                                             "Compressed %'d files into “%s”",
                                             compress_job->total_files),
@@ -8640,7 +8714,7 @@ compress_job_on_completed (AutoarCompressor *compressor,
     }
 
     nautilus_progress_info_take_status (compress_job->common.progress,
-                                        status);
+                                        status, short_status);
 
     nautilus_file_changes_queue_file_added (compress_job->output_file);
 
