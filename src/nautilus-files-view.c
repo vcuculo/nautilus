@@ -7610,6 +7610,7 @@ real_update_actions_state (NautilusFilesView *view)
 {
     NautilusFilesViewPrivate *priv = nautilus_files_view_get_instance_private (view);
     NautilusMode mode = nautilus_window_slot_get_mode (priv->slot);
+    gboolean mode_is_save = (mode == NAUTILUS_MODE_SAVE_FILE || mode == NAUTILUS_MODE_SAVE_FILES);
     g_autolist (NautilusFile) selection = NULL;
     GList *l;
     gint selection_count;
@@ -7846,7 +7847,7 @@ real_update_actions_state (NautilusFilesView *view)
     action = g_action_map_lookup_action (G_ACTION_MAP (view_action_group),
                                          "copy");
     g_simple_action_set_enabled (G_SIMPLE_ACTION (action),
-                                 mode == NAUTILUS_MODE_BROWSE &&
+                                 (mode == NAUTILUS_MODE_BROWSE || mode_is_save) &&
                                  can_copy_files);
     action = g_action_map_lookup_action (G_ACTION_MAP (view_action_group),
                                          "create-link-in-place");
@@ -7985,7 +7986,7 @@ real_update_actions_state (NautilusFilesView *view)
     action = g_action_map_lookup_action (G_ACTION_MAP (view_action_group),
                                          "paste");
     g_simple_action_set_enabled (G_SIMPLE_ACTION (action),
-                                 mode == NAUTILUS_MODE_BROWSE &&
+                                 (mode == NAUTILUS_MODE_BROWSE || mode_is_save) &&
                                  !is_read_only &&
                                  !selection_contains_recent &&
                                  !is_in_trash &&
@@ -7994,7 +7995,7 @@ real_update_actions_state (NautilusFilesView *view)
     action = g_action_map_lookup_action (G_ACTION_MAP (view_action_group),
                                          "paste_accel");
     g_simple_action_set_enabled (G_SIMPLE_ACTION (action),
-                                 mode == NAUTILUS_MODE_BROWSE);
+                                 (mode == NAUTILUS_MODE_BROWSE || mode_is_save));
 
     action = g_action_map_lookup_action (G_ACTION_MAP (view_action_group),
                                          "paste-into");
