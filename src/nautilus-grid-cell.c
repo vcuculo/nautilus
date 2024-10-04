@@ -162,26 +162,6 @@ on_icon_size_changed (NautilusGridCell *self)
     update_captions (self);
 }
 
-static void
-on_item_is_cut_changed (NautilusGridCell *self)
-{
-    gboolean is_cut;
-    g_autoptr (NautilusViewItem) item = NULL;
-
-    item = nautilus_view_cell_get_item (NAUTILUS_VIEW_CELL (self));
-    g_object_get (item,
-                  "is-cut", &is_cut,
-                  NULL);
-    if (is_cut)
-    {
-        gtk_widget_add_css_class (self->icon, "cut");
-    }
-    else
-    {
-        gtk_widget_remove_css_class (self->icon, "cut");
-    }
-}
-
 static gboolean
 on_label_query_tooltip (GtkWidget  *widget,
                         int         x,
@@ -268,6 +248,77 @@ finalize (GObject *object)
     G_OBJECT_CLASS (nautilus_grid_cell_parent_class)->finalize (object);
 }
 
+static GskPath *
+get_border_path (graphene_rect_t *rect,
+                 float            radius)
+{
+    float width = rect->size.width, height = rect->size.height;
+
+    GskPathBuilder *path_builder = gsk_path_builder_new ();
+
+    gsk_path_builder_move_to (path_builder, rect->origin.x, rect->origin.y + radius);
+    gsk_path_builder_rel_arc_to (path_builder, 0.0, -radius, radius, -radius);
+    gsk_path_builder_rel_line_to (path_builder, width, 0.0);
+    gsk_path_builder_rel_arc_to (path_builder, radius, 0.0, radius, radius);
+    gsk_path_builder_rel_line_to (path_builder, 0.0, height);
+    gsk_path_builder_rel_arc_to (path_builder, 0.0, radius, -radius, radius);
+    gsk_path_builder_rel_line_to (path_builder, -width, 0.0);
+    gsk_path_builder_rel_arc_to (path_builder, -radius, 0.0, -radius, -radius);
+    gsk_path_builder_close (path_builder);
+
+    return gsk_path_builder_free_to_path (path_builder);
+}
+
+static void
+snapshot (GtkWidget   *widget,
+          GtkSnapshot *snapshot)
+{
+    NautilusViewCell *self = (NautilusViewCell *) widget;
+    gboolean is_cut;
+    g_autoptr (NautilusViewItem) item = NULL;
+
+    item = nautilus_view_cell_get_item (NAUTILUS_VIEW_CELL (self));
+    g_object_get (item,
+                  "is-cut", &is_cut,
+                  NULL);
+
+    if (is_cut)
+    {
+        /*
+         * Draw dashed border
+         */
+        const float radius = 12.0;
+        float width = gtk_widget_get_width (widget);
+        float height = gtk_widget_get_height (widget);
+        graphene_rect_t border_rect = GRAPHENE_RECT_INIT (- radius / 2.0, - radius / 2.0,
+                                                          width - radius, height - radius);
+        g_autoptr (GskPath) path = get_border_path (&border_rect, radius);
+        GdkRGBA color;
+        GskStroke *stroke = gsk_stroke_new (1.5);
+        /* Calculate the path length and divide it by a fixed number of dashes
+         * to have an exact fractional dash length with no overlap at the
+         * start/end point */
+        const float ideal_dash_length = 20.0;
+        const float dash_stroke_fraction = 12 / ideal_dash_length;
+        const float dash_space_fraction = 8 / ideal_dash_length;
+        float border_length = border_rect.size.width * 2 +
+                              border_rect.size.height * 2 +
+                              2 * G_PI * radius;
+        const float number_of_dashes = round (border_length / ideal_dash_length);
+        float dash_length = border_length / number_of_dashes;
+        float dash_pattern[] = {dash_length * dash_stroke_fraction,
+                                dash_length * dash_space_fraction};
+
+        gsk_stroke_set_dash (stroke, dash_pattern, G_N_ELEMENTS (dash_pattern));
+        gsk_stroke_set_line_cap (stroke, GSK_LINE_CAP_ROUND);
+        gtk_widget_get_color (widget, &color);
+
+        gtk_snapshot_append_stroke (snapshot, path, stroke, &color);
+    }
+
+    GTK_WIDGET_CLASS (nautilus_grid_cell_parent_class)->snapshot (widget, snapshot);
+}
+
 static void
 nautilus_grid_cell_class_init (NautilusGridCellClass *klass)
 {
@@ -276,6 +327,8 @@ nautilus_grid_cell_class_init (NautilusGridCellClass *klass)
 
     object_class->dispose = nautilus_grid_cell_dispose;
     object_class->finalize = finalize;
+
+    widget_class->snapshot = snapshot;
 
     gtk_widget_class_set_template_from_resource (widget_class, "/org/gnome/nautilus/ui/nautilus-grid-cell.ui");
 
@@ -311,7 +364,7 @@ nautilus_grid_cell_init (NautilusGridCell *self)
     /* Connect automatically to an item. */
     self->item_signal_group = g_signal_group_new (NAUTILUS_TYPE_VIEW_ITEM);
     g_signal_group_connect_swapped (self->item_signal_group, "notify::is-cut",
-                                    (GCallback) on_item_is_cut_changed, self);
+                                    (GCallback) gtk_widget_queue_draw, self);
     g_signal_group_connect_swapped (self->item_signal_group, "file-changed",
                                     (GCallback) on_file_changed, self);
     g_signal_connect_object (self->item_signal_group, "bind",
