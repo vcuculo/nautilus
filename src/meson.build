@@ -8,6 +8,17 @@ resources = gnome.compile_resources(
   extra_args: '--manual-register'
 )
 
+# Desktop Portal D-Bus interfaces
+desktop_portal_dbus_interfaces = [
+  'org.freedesktop.impl.portal.FileChooser',
+  'org.freedesktop.impl.portal.Request',
+]
+
+desktop_portal_dbus_interfaces_files = []
+foreach intf: desktop_portal_dbus_interfaces
+  desktop_portal_dbus_interfaces_files += [meson.project_source_root() / 'data' / '@0@.xml'.format(intf)]
+endforeach
+
 libnautilus_sources = [
   gnome.mkenums(
     'nautilus-enum-types',
@@ -54,6 +65,12 @@ libnautilus_sources = [
     ),
     interface_prefix: 'org.gnome',
     namespace: 'Nautilus'
+  ),
+  gnome.gdbus_codegen(
+    'xdg-desktop-portal-dbus',
+    sources: desktop_portal_dbus_interfaces_files,
+    interface_prefix: 'org.freedesktop.impl.portal.',
+    namespace: 'XdpImpl',
   ),
   'gtk/nautilusgtkplacessidebar.c',
   'gtk/nautilusgtkplacessidebarprivate.h',
@@ -276,7 +293,9 @@ libnautilus_sources = [
   'nautilus-enums.h',
   'nautilus-types.h',
   'nautilus-tracker-utilities.c',
-  'nautilus-tracker-utilities.h'
+  'nautilus-tracker-utilities.h',
+  'request.c',
+  'request.h',
 ]
 
 nautilus_deps = [
@@ -292,7 +311,7 @@ nautilus_deps = [
   nautilus_extension,
   selinux,
   tracker_sparql,
-  xdp_gnome,
+  libgxdp,
   cloudproviders,
 ]
 
